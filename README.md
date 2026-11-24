@@ -32,6 +32,23 @@ In the controlled crossing, a run succeeds when both vehicle centers have travel
 
 The calibrated fixed discount and the adaptive discount produced identical trajectories in all 14 conditions. For PPO replay, ten measured vehicle pairs from one INTERACTION intersection, two proposer orders, and two checkpoints gave 40 runs per discount. Across 80 adaptive-versus-fixed comparisons, the offers and vehicle trajectories matched step by step. Enabling fixed release increased completions from **14/40 to 22/40** per discount, with **8/40 collisions** in both settings. In these encounters, changing when vehicles resumed cruising affected completion, while varying the discount produced no observed change in the PPO trajectory.
 
+## Screen fixed paths for close encounters
+
+The fixed-path tools model each vehicle as a rectangle aligned with each segment of its measured path. A pair qualifies when its swept bodies come within 1 m over a common observation interval of at least 3 seconds in which each car moves at least 5 m between its endpoints. The screen measures spatial proximity across the paths. A simulated near miss or collision depends on the clearance between both vehicles at the same time. Missing vehicle dimensions use a 4.5 × 1.8 m rectangle, with a 5.0 × 2.0 m estimate to flag additional candidates.
+
+From the repository root, run the following with NumPy and Shapely 2. Waymo scanning also requires protobuf and uses the annotated vehicle pairs in the local interactive validation shards. The defaults use locally prepared manifests in the sibling `TCC-Driving` checkout and Waymo shards in the user's Downloads folder. Use `--help` to see input and output path overrides.
+
+```powershell
+python -m traffic_data.fixed_path.audit_swept_footprints
+python -m traffic_data.fixed_path.screen_fixed_path_near_misses
+foreach ($dataset in 'INTERACTION', 'INTERACTION-TC', 'SinD', 'Songdo', 'Waymo') {
+    python -m traffic_data.fixed_path.find_raw_fixed_path_pairs $dataset
+}
+python -m traffic_data.fixed_path.combine_raw_near_miss_pairs
+```
+
+The raw scan keeps one entry per recording and unordered vehicle pair, compares those pairs with the earlier manifest, and writes the new pairs with their source file, vehicle IDs, observation interval, and clearance. The candidate manifests and scan results stay under the ignored `Result/fixed_path_audit/` directory by default. The optional `plot_fixed_path_clearance` module uses Matplotlib to plot the clearance distribution.
+
 ## Reproduce the experiments
 
 Place the [TCC-Driving baseline](https://github.com/montsilen/TCC-Driving/tree/8e9891e20f68d563476c5e1dae40f4e42c14d954) beside this checkout. It supplies the bargaining protocol, vehicle model, and PPO policy. From the TCC-Transport root, use a Python environment with NumPy and PyTorch and run the following PowerShell commands.
