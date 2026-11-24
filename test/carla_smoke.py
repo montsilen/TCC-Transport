@@ -141,7 +141,7 @@ def main():
     p.add_argument("--map", default=None, help="Optional map change on an idle server")
     p.add_argument("--steps", type=int, default=40)
     p.add_argument("--seed", type=int, default=20261030)
-    p.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[2] / "Result" / "carla_environment_smoke")
+    p.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "Result" / "carla_environment_smoke")
     args = p.parse_args()
     if args.steps < 1:
         p.error("steps must be positive")

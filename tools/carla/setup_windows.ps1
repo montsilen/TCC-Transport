@@ -71,7 +71,7 @@ if ($StartServer) {
 }
 if ($Smoke) {
     Write-InstallState 'physics_and_sensor_smoke' 'running'
-    & $pythonExe (Join-Path $PSScriptRoot 'smoke.py') --port $Port
+    & $pythonExe (Join-Path $projectRoot 'test/carla_smoke.py') --port $Port
     if ($LASTEXITCODE) { throw 'CARLA physics/sensor smoke test failed' }
 }
 $doctorArgs = @()

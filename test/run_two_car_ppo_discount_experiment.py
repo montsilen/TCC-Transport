@@ -9,6 +9,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from build_real_traffic_cases import load_cases
+from interaction_two_car_cases import extract_cases
 from opencood.models.comm_modules.rubinstein_bargaining import (
     RubinsteinBargaining,
     alternating_offers_protocol,
@@ -139,12 +141,8 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     episodes, pairs = [], []
     if args.case_manifest:
-        from build_real_traffic_cases import load_cases
-
         cases, sources = load_cases(args.case_manifest)
     elif args.tracks:
-        from interaction_two_car_cases import extract_cases
-
         cases, sources = extract_cases(args.tracks, extended=args.extended_tracks)
     else:
         cases = [make_crossing_case("intersection", gap) for gap in GAPS]

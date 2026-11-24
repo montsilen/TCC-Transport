@@ -49,7 +49,7 @@ when finished to release GPU memory.
 $env:CARLA_ROOT = "$PWD/simulation/carla/WindowsNoEditor"
 $env:PATH = "$PWD/.venv-carla;$PWD/.venv-carla/Library/bin;$env:PATH"
 ./.venv-carla/python.exe tools/carla/doctor.py --connect
-./.venv-carla/python.exe tools/carla/smoke.py
+./.venv-carla/python.exe test/carla_smoke.py
 ```
 
 The smoke test uses an idle server, spawns one vehicle plus RGB, LiDAR and
