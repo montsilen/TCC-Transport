@@ -1,0 +1,4 @@
+# Windows CPython 3.8, deliberately separate from the legacy ML stack.
+carla==0.9.15
+numpy==1.24.4
+pygame==2.5.2

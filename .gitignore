@@ -218,3 +218,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local traffic datasets and experiment artifacts
+Result/
+data/
+datasets/
+.venv-carla/
+simulation/carla/
+*.csv
+*.tsv
+*.jsonl
+*.parquet
+*.tfrecord*
+*.npz
+*.npy
+*.h5
+*.zip
+*.pth
+*.pt
+*.ckpt
