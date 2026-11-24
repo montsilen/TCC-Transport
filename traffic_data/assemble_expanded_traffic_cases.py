@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from build_real_traffic_cases import load_cases
-from enrich_real_traffic_cases import enrich
+from .build_real_traffic_cases import load_cases
+from .enrich_real_traffic_cases import enrich
 
 
 RESULT = Path("Result")

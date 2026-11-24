@@ -11,7 +11,7 @@ import struct
 import numpy as np
 from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
 
-from enrich_real_traffic_cases import maneuver
+from ..enrich_real_traffic_cases import maneuver
 
 
 def message_types():

@@ -6,7 +6,7 @@ import json
 import math
 from pathlib import Path
 
-from build_real_traffic_cases import load_cases
+from .build_real_traffic_cases import load_cases
 
 
 MAX_STEP_S = {"INTERACTION": 0.2, "SinD": 0.2, "Waymo Open Motion": 0.21,

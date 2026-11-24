@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from interaction_two_car_cases import scan_cases
+from .sources.interaction_two_car_cases import scan_cases
 from run_mechanism_ablation_v2 import ScenarioCase, Vehicle
 
 
