@@ -28,6 +28,9 @@ class Track:
     times: np.ndarray
     xy: np.ndarray
     size: tuple | None
+    clock_ms: np.ndarray | None = None
+    velocity_xy: np.ndarray | None = None
+    heading_rad: np.ndarray | None = None
 
 
 def recordings(dataset, source, tc_root):
@@ -62,7 +65,14 @@ def road_type(site):
     return "intersection"
 
 
-def read_tracks(path, dataset):
+def optional_number(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return np.nan
+
+
+def read_tracks(path, dataset, *, include_kinematics=False):
     by_car = defaultdict(dict)
     songdo = dataset == "Songdo"
     with path.open(newline="", encoding="utf-8-sig") as stream:
@@ -82,12 +92,18 @@ def read_tracks(path, dataset):
                 x, y = float(row["x"]), float(row["y"])
                 size = dimensions(row)
             if np.isfinite(x) and np.isfinite(y):
-                by_car[identifier][time] = (x, y, size)
+                row_data = (x, y, size)
+                if include_kinematics:
+                    clock = optional_number(row["timestamp_ms"]) if dataset == "SinD" else time
+                    row_data += (clock, optional_number(row.get("vx")), optional_number(row.get("vy")),
+                                 optional_number(row.get("psi_rad", row.get("yaw_rad"))))
+                by_car[identifier][time] = row_data
 
     for identifier, by_time in by_car.items():
         times = np.array(sorted(by_time))
         points = [by_time[time] for time in times]
         xy = np.array([point[:2] for point in points])
+        kinematics = np.array([point[3:] for point in points]) if include_kinematics else None
         sizes = [point[2] for point in points if point[2] is not None]
         size = tuple(np.median(sizes, axis=0)) if sizes else None
         for run in continuous_runs(times, 150 if songdo else 100):
@@ -99,7 +115,11 @@ def read_tracks(path, dataset):
                 positions = np.column_stack([np.interp(target, t, axis) for axis in positions.T])
                 t = target
             if t[-1] - t[0] >= MIN_DURATION_MS and np.linalg.norm(np.ptp(positions, axis=0)) >= MIN_DISPLACEMENT_M:
-                yield Track(identifier, t, positions, size)
+                if kinematics is not None and not songdo:
+                    clock, vx, vy, heading = kinematics[run].T
+                    yield Track(identifier, t, positions, size, clock, np.column_stack((vx, vy)), heading)
+                else:
+                    yield Track(identifier, t, positions, size)
 
 
 def continuous_runs(times, max_gap=100):
@@ -184,9 +204,8 @@ def previous_waymo_pairs(path):
             for case in cases if case["dataset"] == "Waymo Open Motion"}
 
 
-def scan_waymo(baseline, previous_near, downloads):
+def waymo_footprint_message_types():
     from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
-    from traffic_data.sources.extract_waymo_two_car_cases import records
 
     descriptor = descriptor_pb2.FileDescriptorProto(name="raw_waymo_footprints.proto", syntax="proto2")
     field = descriptor_pb2.FieldDescriptorProto
@@ -197,6 +216,8 @@ def scan_waymo(baseline, previous_near, downloads):
                   ("states", 3, field.TYPE_BYTES, True)],
         "State": [("x", 2, field.TYPE_DOUBLE, False), ("y", 3, field.TYPE_DOUBLE, False),
                   ("length", 5, field.TYPE_FLOAT, False), ("width", 6, field.TYPE_FLOAT, False),
+                     ("heading", 8, field.TYPE_FLOAT, False),
+                     ("vx", 9, field.TYPE_FLOAT, False), ("vy", 10, field.TYPE_FLOAT, False),
                   ("valid", 11, field.TYPE_BOOL, False)],
     }.items():
         message = descriptor.message_type.add(name=name)
@@ -205,10 +226,16 @@ def scan_waymo(baseline, previous_near, downloads):
                               label=field.LABEL_REPEATED if repeated else field.LABEL_OPTIONAL)
     pool = descriptor_pool.DescriptorPool()
     pool.Add(descriptor)
-    scenario_type, track_type, state_type = [
+    return tuple(
         message_factory.GetMessageClass(pool.FindMessageTypeByName(name))
         for name in ("Scenario", "Track", "State")
-    ]
+    )
+
+
+def scan_waymo(baseline, previous_near, downloads):
+    from traffic_data.sources.extract_waymo_two_car_cases import records
+
+    scenario_type, track_type, state_type = waymo_footprint_message_types()
     rows, coverage, seen = [], [], set()
     for path in sorted(downloads.glob("*validation_interactive*.tfrecord-*")):
         count = accepted = 0

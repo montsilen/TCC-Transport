@@ -49,6 +49,10 @@ python -m traffic_data.fixed_path.combine_raw_near_miss_pairs
 
 The raw scan keeps one entry per recording and unordered vehicle pair, compares those pairs with the earlier manifest, and writes the new pairs with their source file, vehicle IDs, observation interval, and clearance. The candidate manifests and scan results stay under the ignored `Result/fixed_path_audit/` directory by default. The optional `plot_fixed_path_clearance` module uses Matplotlib to plot the clearance distribution.
 
+## Replay measured paths to their endpoints
+
+The full-path experiment synchronizes **125,932** pairs from INTERACTION, Songdo, SinD, and Waymo. Each car follows its own measured route and records its own arrival time. At the first arrival, that car leaves the interaction and the safety measurement ends. The second car continues to its endpoint. The study compares discrete and continuous offers under TTC-adaptive and fixed discounts, with and without predictive safety screening. [Experiment protocol, results, and reproduction commands](docs/fixed_path_replay.md)
+
 ## Reproduce the experiments
 
 Place the [TCC-Driving baseline](https://github.com/montsilen/TCC-Driving/tree/8e9891e20f68d563476c5e1dae40f4e42c14d954) beside this checkout. It supplies the bargaining protocol, vehicle model, and PPO policy. From the TCC-Transport root, use a Python environment with NumPy and PyTorch and run the following PowerShell commands.
